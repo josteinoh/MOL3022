@@ -5,7 +5,7 @@
 ## Ownership and credit
 
 The contents of this README and of `main.py` are, in their entirety, written by Jostein Haraldstad and František Nentwich, for the course MOL3022 at NTNU in the spring semester of 2022.
-All files used should be sourced from https://github.com/josteinoh/MOL3022. The repository can be cloned as a whole (recommended), or the files can be downloaded individually.  
+All files used should be sourced from https://github.com/josteinoh/MOL3022. The repository can be cloned as a whole (recommended), or the files can be downloaded individually. The method used is based on a method by Maclin and Shavlik, which in turn is based on a method by Chou and Fasman. The data used is provided by Qing and Sejnowski. Details on this can be read below.  
 
 ## Purpose and functionality
 
