@@ -1,11 +1,22 @@
-
-# preamble with ownership and credits
-# maybe also a mention of a README or similar
-
-
-# data sets
+# preamble
 # region
 
+# this code was written, in its entirety, by Jostein Haraldstad and Frantisek Nentwich, for MOL3022 @ NTNU in the spring semester of 2022
+# it should be sourced from https://github.com/josteinoh/MOL3022
+
+# the purpose of this code is to predict the secondary structure of proteins based on their amino acid sequences
+# the code is based on a method devised by Chou and Fasman, details can be found at https://archive.ics.uci.edu/ml/datasets/Molecular+Biology+(Protein+Secondary+Structure) and its referenced papers
+# more info can be found in the code's attached README file (README.md)
+
+# endregion
+
+
+#imports
+from os import path
+
+
+# default values for the data sets, based on the Chou-Fasman method
+# region
 weights = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 helix_formers     = {"E" : 1.37*weights[0], "A" : 1.29*weights[1], "L" : 1.20*weights[2], "H" : 1.11*weights[3], "M" : 1.07*weights[4], "Q" : 1.04*weights[5], "W" : 1.02*weights[6], "V" : 1.02*weights[7], "F" : 1.00*weights[8]}
 helix_high_indiff = {"K" : 0.54*weights[9], "I" : 0.50*weights[10]}
@@ -17,23 +28,8 @@ sheet_indiff      = ["A", "R", "G", "D"]
 # endregion
 
 
-# creates the dictionaries used to hold data, updated with the current main adjustment coefficients
-def create_dicts(arg_hf, arg_hb, arg_sf, arg_sb):
-
-    h_formers     = {"E" : 1.37*arg_hf, "A" : 1.29*arg_hf, "L" : 1.20*arg_hf, "H" : 1.11*arg_hf, "M" : 1.07*arg_hf, "Q" : 1.04*arg_hf, "W" : 1.02*arg_hf, "V" : 1.02*arg_hf, "F" : 1.00*arg_hf}
-    h_high_indiff = {"K" : 0.54*arg_hf, "I" : 0.50*arg_hf}
-    h_breakers    = {"N" : 1.00*arg_hb, "Y" : 1.20*arg_hb, "P" : 1.24*arg_hb, "G" : 1.38*arg_hb}
-    h_indiff      = ["K", "I", "D", "T", "S", "R", "C"]
-    s_formers     = {"M" : 1.40*arg_sf, "V" : 1.39*arg_sf, "I" : 1.34*arg_sf, "C" : 1.09*arg_sf, "Y" : 1.08*arg_sf, "F" : 1.07*arg_sf, "Q" : 1.03*arg_sf, "L" : 1.02*arg_sf, "T" : 1.01*arg_sf, "W" : 1.00*arg_sf}
-    s_breakers    = {"K" : 1.00*arg_sb, "S" : 1.03*arg_sb, "H" : 1.04*arg_sb, "N" : 1.14*arg_sb, "P" : 1.19*arg_sb, "E" : 2.00*arg_sb}
-    s_indiff      = ["A", "R", "G", "D"]
-
-    return h_formers, h_high_indiff, h_breakers, h_indiff, s_formers, s_breakers, s_indiff
-
-
-
-# creates the dictionaries used to hold data, updated with the current individual adjustment coefficients
-def create_dicts_2(arg_weight_list):
+# returns the dictionaries used to hold data, updated with the current individual adjustment coefficients
+def create_dicts(arg_weight_list):
 
     h_formers     = {"E" : 1.37*arg_weight_list[0], "A" : 1.29*arg_weight_list[1], "L" : 1.20*arg_weight_list[2], "H" : 1.11*arg_weight_list[3], "M" : 1.07*arg_weight_list[4], "Q" : 1.04*arg_weight_list[5], "W" : 1.02*arg_weight_list[6], "V" : 1.02*arg_weight_list[7], "F" : 1.00*arg_weight_list[8]}
     h_high_indiff = {"K" : 0.54*arg_weight_list[9], "I" : 0.50*arg_weight_list[10]}
@@ -46,30 +42,62 @@ def create_dicts_2(arg_weight_list):
     return h_formers, h_high_indiff, h_breakers, h_indiff, s_formers, s_breakers, s_indiff
 
 
+# returns the dictionaries used to hold data, updated with the current individual adjustment coefficients from a file
+def create_dicts_file(arg_filename, enable_console=True):
+
+    filename = arg_filename
+
+    if enable_console:
+        console_filename = input("Input path + name + extension of the input text file containing optimized weights, or press enter without input to use the default name (\"weights.txt\"): ")
+        if console_filename:
+            filename = console_filename
+
+    weight_list = []
+
+    if not path.exists(filename):
+
+       write_weights(filename, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], False)
+
+    with open(arg_filename, "r") as f:
+
+        for line in f:
+            if line != "\n":
+                weight_list.append(float(line.strip()))
+
+    h_formers     = {"E" : 1.37*weight_list[0], "A" : 1.29*weight_list[1], "L" : 1.20*weight_list[2], "H" : 1.11*weight_list[3], "M" : 1.07*weight_list[4], "Q" : 1.04*weight_list[5], "W" : 1.02*weight_list[6], "V" : 1.02*weight_list[7], "F" : 1.00*weight_list[8]}
+    h_high_indiff = {"K" : 0.54*weight_list[9], "I" : 0.50*weight_list[10]}
+    h_breakers    = {"N" : 1.00*weight_list[11], "Y" : 1.20*weight_list[12], "P" : 1.24*weight_list[13], "G" : 1.38*weight_list[14]}
+    h_indiff      = ["K", "I", "D", "T", "S", "R", "C"]
+    s_formers     = {"M" : 1.40*weight_list[15], "V" : 1.39*weight_list[16], "I" : 1.34*weight_list[17], "C" : 1.09*weight_list[18], "Y" : 1.08*weight_list[19], "F" : 1.07*weight_list[20], "Q" : 1.03*weight_list[21], "L" : 1.02*weight_list[22], "T" : 1.01*weight_list[23], "W" : 1.00*weight_list[24]}
+    s_breakers    = {"K" : 1.00*weight_list[25], "S" : 1.03*weight_list[26], "H" : 1.04*weight_list[27], "N" : 1.14*weight_list[28], "P" : 1.19*weight_list[29], "E" : 2.00*weight_list[30]}
+    s_indiff      = ["A", "R", "G", "D"]
+
+    return h_formers, h_high_indiff, h_breakers, h_indiff, s_formers, s_breakers, s_indiff
+
 
 # gets a value from a certain dictionary, returning 0 if the specified key does not exist in the dictionary
-def get_value(key, dict):
+def get_value(arg_key, arg_dict):
     
-    if key in dict:
-        return dict[key]
+    if arg_key in arg_dict:
+        return arg_dict[arg_key]
     return 0
 
 
 # gets data for training or testing from a file, returning two arrays of strings
 # one array holds each test's amino acids, the other holds each test's structures
-def read_file(arg_filename, padding, enable_console=True):
+def read_file(arg_filename, input_string, enable_console=True):
 
     filename = arg_filename
 
     if enable_console:
-        console_filename = input("Input the path+name of the data file, or press enter without input if the path+name is specified in the code: ")
+        console_filename = input(input_string)
         if console_filename:
             filename = console_filename
 
     output_amino_strings = []
     output_structure_strings = []
-    current_amino_string = "Z"*padding
-    current_structure_string = "z"*padding
+    current_amino_string = "Z"*6
+    current_structure_string = "z"*6
     begin = False
 
     with open(filename, "r") as f:
@@ -80,19 +108,68 @@ def read_file(arg_filename, padding, enable_console=True):
 
             elif line[:5] == "<end>" or line[:3] == "end":
                 begin = False
-                current_amino_string += "Z"*padding
-                current_structure_string += "z"*padding
+                current_amino_string += "Z"*6
+                current_structure_string += "z"*6
                 output_amino_strings.append(current_amino_string)
                 output_structure_strings.append(current_structure_string)
-                current_amino_string = "Z"*padding
-                current_structure_string = "z"*padding
+                current_amino_string = "Z"*6
+                current_structure_string = "z"*6
 
             else:
                 if begin:
                     current_amino_string += line[0]
-                    current_structure_string += line[2]
+                    if len(line) > 2:
+                        current_structure_string += line[2]
 
     return output_amino_strings, output_structure_strings
+
+
+# writes the list of weights to a file for saving
+def write_weights(arg_filename, arg_weight_list, enable_console=True):
+
+    filename = arg_filename
+
+    if enable_console:
+        console_filename = input("Input path + name + extension of the target text file for saving weights, or press enter without input to use the default name (\"weights.txt\"): ")
+        if console_filename:
+            filename = console_filename
+
+    with open(filename, "w") as f:
+
+        for weight in arg_weight_list:
+            if 0.9999 < weight < 1.0001:
+                f.write(str(1))
+            else:
+                f.write(str(weight))
+            f.write("\n")
+
+    return filename
+
+
+# writes the list of aminos + structures to a file for saving
+def write_structures(arg_filename, arg_aminos, arg_structures, enable_console=True):
+
+    filename = arg_filename
+
+    if enable_console:
+        console_filename = input("Input path + name + extension of the target text file for saving predicted structures, or press enter without input to use the default name (\"predicted_structures.txt\"): ")
+        if console_filename:
+            filename = console_filename
+
+    with open(filename, "w") as f:
+
+        for i in range (len(arg_structures)):
+            f.write("\n<>")
+
+            for j in range (len(arg_structures[i])):
+                f.write("\n")
+                f.write(arg_aminos[i][j+6])
+                f.write(" ")
+                f.write(arg_structures[i][j])
+
+            f.write("\n<end>")
+
+    return filename
 
 
 # determines if a helix structure is to be broken, if the current structure is a helix
@@ -184,32 +261,32 @@ def predict_structure(arg_string, last_structure):
 
 
 # runs a series of structure predictions on a single sequence of amino acids, returning a string containing the structures
-# the input is a string of amino acids of any length, and the wanted padding for the sequence (default: 6)
-def run_sequence(arg_amino, padding):
+# the input is a string of amino acids of any length
+def run_sequence(arg_amino):
 
     return_structure = "_"
     predicted_structure = ""
-    for i in range ( padding, len(arg_amino) - padding ):
-        predicted_structure = predict_structure(arg_amino[i-padding+1:i+padding], return_structure[-1])
+    for i in range ( 6, len(arg_amino) - 6 ):
+        predicted_structure = predict_structure(arg_amino[i-6+1:i+6], return_structure[-1])
         return_structure += predicted_structure
     
     return return_structure[1:]
 
 
 # compares two structures, returning how many of the structures are the same
-# the inputs are two structures, and the padding used
-def compare_structures(arg_predicted_structures, arg_correct_structures, padding):
+# the inputs are two structures
+def compare_structures(arg_predicted_structures, arg_correct_structures):
 
     hits = 0
     for i in range ( min( len(arg_predicted_structures), len(arg_correct_structures) ) ):
-        hits += int( arg_predicted_structures[i] == arg_correct_structures[i + padding] )
+        hits += int( arg_predicted_structures[i] == arg_correct_structures[i + 6] )
 
     return hits
 
 
 # runs a single test
 # returns the score and number of tries
-def run_full_test(arg_amino_strings, arg_structure_strings, padding=6):
+def run_full_test(arg_amino_strings, arg_structure_strings):
 
     predicted_structures = []
     scores = []
@@ -217,10 +294,10 @@ def run_full_test(arg_amino_strings, arg_structure_strings, padding=6):
     total_tries = 0
 
     for i in range (len(arg_amino_strings)):
-        predicted_structures.append(run_sequence(arg_amino_strings[i], padding))
+        predicted_structures.append(run_sequence(arg_amino_strings[i]))
 
     for j in range (len(predicted_structures)):
-        scores.append([ compare_structures(predicted_structures[j], arg_structure_strings[j], padding), len(predicted_structures[j]) ])
+        scores.append([ compare_structures(predicted_structures[j], arg_structure_strings[j]), len(predicted_structures[j]) ])
 
     for k in range (len(scores)):
         total_score += scores[k][0]
@@ -228,62 +305,23 @@ def run_full_test(arg_amino_strings, arg_structure_strings, padding=6):
     return total_score, total_tries
 
 
-# runs the optimization algorithm for the weights for the coefficients
-# returns the best score, number of tries, and the optimal weights
-def run_optimization(filename, step_sizes=3, padding=6, enable_console=True):
+# runs a single test
+# returns the predicted structures
+def run_prediction(arg_amino_strings):
 
-    file_amino_strings, file_structure_strings = read_file(filename, padding, enable_console)
+    predicted_structures = []
 
-    weight_list = [1, 1, 1, 1]
-    global helix_formers
-    global helix_high_indiff
-    global helix_breakers
-    global helix_indiff
-    global sheet_formers
-    global sheet_breakers
-    global sheet_indiff
+    for i in range (len(arg_amino_strings)):
+        predicted_structures.append(run_sequence(arg_amino_strings[i]))
 
-    current_score = 0
-    best_score = 0
-
-    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list[0], weight_list[1], weight_list[2], weight_list[3])
-
-    for i in range (1, step_sizes + 1):
-        step = 10**(-i)
-
-        for j in range (len(weight_list)):
-
-            best_score, tries = run_full_test(file_amino_strings, file_structure_strings, 6)
-            current_score = best_score + 1
-            while current_score > best_score:
-                weight_list[j] += step
-                helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list[0], weight_list[1], weight_list[2], weight_list[3])
-                current_score, tries = run_full_test(file_amino_strings, file_structure_strings, 6)
-                if current_score > best_score:
-                    best_score = current_score
-                else:
-                    weight_list[j] -= step
-                    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list[0], weight_list[1], weight_list[2], weight_list[3])
-
-            current_score = best_score + 1
-            while current_score > best_score:
-                weight_list[j] -= step
-                helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list[0], weight_list[1], weight_list[2], weight_list[3])
-                current_score, tries = run_full_test(file_amino_strings, file_structure_strings, 6)
-                if current_score > best_score:
-                    best_score = current_score
-                else:
-                    weight_list[j] += step
-                    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list[0], weight_list[1], weight_list[2], weight_list[3])
-
-    return best_score, tries, weight_list[:]
+    return predicted_structures
 
 
 # runs the optimization algorithm for the weights for the coefficients
 # returns the best score, number of tries, and the optimal weights
-def run_optimization_2(filename, step_sizes=3, padding=6, enable_console=True):
+def run_optimization(filename, enable_console=True):
 
-    file_amino_strings, file_structure_strings = read_file(filename, padding, enable_console)
+    file_amino_strings, file_structure_strings = read_file(filename, "Input path + name + extension of the input text file for training, or press enter without input to use the default name (\"train.txt\"): ", enable_console)
 
     weight_list = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     global helix_formers
@@ -297,71 +335,42 @@ def run_optimization_2(filename, step_sizes=3, padding=6, enable_console=True):
     current_score = 0
     best_score = 0
 
-    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts_2(weight_list)
+    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list)
 
-    for i in range (1, step_sizes + 1):
+    for i in range (1, 4):
         step = 10**(-i)
 
         for j in range (len(weight_list)):
 
-            best_score, tries = run_full_test(file_amino_strings, file_structure_strings, 6)
+            best_score, tries = run_full_test(file_amino_strings, file_structure_strings)
             current_score = best_score + 1
             while current_score > best_score:
                 weight_list[j] += step
-                helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts_2(weight_list)
-                current_score, tries = run_full_test(file_amino_strings, file_structure_strings, 6)
+                helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list)
+                current_score, tries = run_full_test(file_amino_strings, file_structure_strings)
                 if current_score > best_score:
                     best_score = current_score
                 else:
                     weight_list[j] -= step
-                    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts_2(weight_list)
+                    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list)
 
             current_score = best_score + 1
             while current_score > best_score:
                 weight_list[j] -= step
-                helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts_2(weight_list)
-                current_score, tries = run_full_test(file_amino_strings, file_structure_strings, 6)
+                helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list)
+                current_score, tries = run_full_test(file_amino_strings, file_structure_strings)
                 if current_score > best_score:
                     best_score = current_score
                 else:
                     weight_list[j] += step
-                    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts_2(weight_list)
+                    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list)
 
     return best_score, tries, weight_list[:]
 
 
-# runs a single test based on the specified file
-# prints the results to console with appropriate formatting
-def run_single(filename, padding=6, enable_console=True):
-
-    file_amino_strings, file_structure_strings = read_file(filename, padding, enable_console)
-
-    total_score, total_tries = run_full_test(file_amino_strings, file_structure_strings, 6)
-    
-    print()
-    print("Total score:", str(total_score).rjust(6))
-    print("Total tries:", str(total_tries).rjust(6))
-    print("Total %:    ", (str(round(total_score*100/total_tries, 2)) + "%").rjust(6))
-    print()
-
-
-# main program
-# runs the optimization algorithm on the specified training file, then tests the optimization results on the specified testing file
-# prints the results to console with appropriate formatting
-def main(filename_train, filename_test, step_sizes=3, padding=6, enable_console=True):
-
-    file_amino_strings, file_structure_strings = read_file(filename_test, padding, enable_console)
-
-    opt_best_score, opt_tries, weight_list = run_optimization_2(filename_train, step_sizes, 6, False)
-
-    print()
-    print("Optimized weights:")
-    print(weight_list)
-    print()
-    print("Best optimized score: ",  str(opt_best_score).rjust(8))
-    print("Number of amino acids:",  str(opt_tries).rjust(8))
-    print("Success rate:         ", (str(round(opt_best_score*100/opt_tries, 2)) + "%").rjust(8))
-    print()
+# runs the optimization algorithm for the weights for the coefficients, saving the coefficients to a file
+# returns the best score, number of tries, and the optimal weights
+def main_opt(arg_filename="train.txt", enable_console=True):
 
     global helix_formers
     global helix_high_indiff
@@ -371,18 +380,119 @@ def main(filename_train, filename_test, step_sizes=3, padding=6, enable_console=
     global sheet_breakers
     global sheet_indiff
 
-    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts(weight_list[0], weight_list[1], weight_list[2], weight_list[3])
+    print()
 
-    total_score, total_tries = run_full_test(file_amino_strings, file_structure_strings, 6)
+    filename = arg_filename
 
+    if enable_console:
+        console_filename = input("Input path + name + extension of the input text file for training, or press enter without input to use the default name (\"train.txt\"): ")
+        if console_filename:
+            filename = console_filename
+
+    print()
+    print("Optimizing...")
+    print()
+    opt_best_score, opt_tries, weight_list = run_optimization(filename, False)
+    filename_weights = write_weights("weights.txt", weight_list)
+    print()
+    print("Best optimized score: ",  str(opt_best_score).rjust(8))
+    print("Number of amino acids:",  str(opt_tries).rjust(8))
+    print("Success rate:         ", (str(round(opt_best_score*100/opt_tries, 2)) + "%").rjust(8))
+    print()
+    print("Optimized weights successfully written to " + filename_weights)
+
+    return opt_best_score, opt_tries, weight_list
+
+
+# runs the algorithm against a known sequence + structure, writing the success rate to console
+# returns the score and the number of tries
+def main_test(arg_filename="test.txt", enable_console=True):
+
+    global helix_formers
+    global helix_high_indiff
+    global helix_breakers
+    global helix_indiff
+    global sheet_formers
+    global sheet_breakers
+    global sheet_indiff
+
+    print()
+
+    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts_file("weights.txt")
+
+    file_amino_strings, file_structure_strings = read_file(arg_filename, "Input path + name + extension of the input text file for testing, or press enter without input to use the default name (\"test.txt\"): ", enable_console)
+    
+    total_score, total_tries = run_full_test(file_amino_strings, file_structure_strings)
+
+    print()
     print("Final score in test run:",  str(total_score).rjust(8))
     print("Number of amino acids:  ",  str(total_tries).rjust(8))
     print("Success rate:           ", (str(round(total_score*100/total_tries, 2)) + "%").rjust(8))
+
+    return total_score, total_tries
+
+
+# runs the algorithm against a sequence with unknown structure, writing the predicted structures to a file
+# does not return anything
+def main_run(arg_filename="data.txt", enable_console=True):
+
+    global helix_formers
+    global helix_high_indiff
+    global helix_breakers
+    global helix_indiff
+    global sheet_formers
+    global sheet_breakers
+    global sheet_indiff
+
     print()
 
-# run_single("protein-secondary-structure_test.txt", 6, False)
+    helix_formers, helix_high_indiff, helix_breakers, helix_indiff, sheet_formers, sheet_breakers, sheet_indiff = create_dicts_file("weights.txt")
 
-# run_optimization("protein-secondary-structure_train.txt", 4, 6, False)
+    file_amino_strings, file_structure_strings = read_file(arg_filename, "Input path + name + extension of the input text file for predicting structures, or press enter without input to use the default name (\"data.txt\"): ", enable_console)
+    
+    predicted_structures = run_prediction(file_amino_strings)
 
-main("protein-secondary-structure_train.txt", "protein-secondary-structure_test.txt", 2, 6, False)
+    filename_structures = write_structures("predicted_structures.txt", file_amino_strings, predicted_structures)
+
+    print()
+    print("Predicted structures successfully written to " + filename_structures)
+
+
+# main program
+# gives the user the choice between optimization, testing, and predicting
+def main():
+
+    choice = " "
+
+    print()
+    print("Type \"opt\" to run the optimization algorithm and save the optimized weights to a file.")
+    print("Type \"test\" to to test the optimized structure prediction algorithm on an amino sequence with known structures and test its success rate.")
+    print("Type \"run\" to run the optimized structure prediction algorithm and save the structures to a file.")
+    print("Hit enter without typing to exit the program.")
+    print("For more info, read README.md")
+
+    while choice:
+
+        print()
+        choice = input("Choose functionality (opt/test/run): ").lower()
+
+        if choice == "opt":
+            main_opt()
+        elif choice == "test":
+            main_test()
+        elif choice == "run":
+            main_run()
+        elif choice:
+            print()
+            print("Invalid choice, please try again.")
+        else:
+            print()
+            print("Exiting program.")
+            print()
+            break
+
+    return 0
+
+
+main()
 
