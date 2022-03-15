@@ -15,7 +15,7 @@ In order to predict the structure for each amino acid in a sequence, the algorit
 
 The methods used for considering and comparing the amino acids and their abilities to start/end each structure are used the same way as Maclin and Shavlik (as well as Chou and Fasman) described, with the exception of the size of the window of amino acids being analyzed. Testing revealed that with our data sets, a window of length 11 was most effective (the current amino acid, as well as the five previous and following amino acids).  
 
-Maclin and Shavlik have assigned each amino acid values for how much that acid affects the starting and ending of the three different structures. However, these can be adjusted to attain somewhat better results, and `main.py` contains an optimization algorithm that adjusts these values, in order for the structure prediction algorithm to produce the best results. This optimization algorithm is a simple implementation of a gradient algorithm, as it adjusts each of the values until the results (i.e. the success rate of the structure prediction algorithm) no longer improve.  
+Maclin and Shavlik use Qing and Sejnowski's data to assign each amino acid values for how much that acid affects the starting and ending of the three different structures. However, these can be adjusted to attain somewhat better results, and `main.py` contains an optimization algorithm that adjusts these values, in order for the structure prediction algorithm to produce the best results. This optimization algorithm is a simple implementation of a gradient algorithm, as it adjusts each of the values until the results (i.e. the success rate of the structure prediction algorithm) no longer improve.  
 
 ## Different modes of usage
 
